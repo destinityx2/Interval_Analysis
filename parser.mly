@@ -47,11 +47,12 @@ instlist : instlist SEMICOLON statement             { %1 :: %3 }
   ;
 
 statement : SKIP                                    { %1 }
+          | primary_statement                       {  }
           | VAR ASSIGN expr                         {  }
           | statement SEMICOLON statement           { %1 :: %3 }
           | WRITE expr                              {  }
           | READ VAR                                {  }
-          | WHILE expr DO statement                 {  }
+          | WHILE expr DO primary_statement         {  }
           | IF expr THEN primary_statement ELSE primary_statement   {  }
   ;
 
@@ -59,7 +60,7 @@ primary_statement  : SKIP                           { %1 }
                    | VAR ASSIGN expr                {  } /** Нужно как-то научиться здесь давать аттрибут VAR'у */
                    | WRITE expr                     {  }
                    | READ VAR                       {  } /** Здесь тоже самое... */
-                   | LEFTBRACKET primary_statement SEMICOLON primary_statement RIGHTBRACKET     { %2 :: %4 } /** Неоднозначная грамматика.. Это ок? */
+                   | LEFTBRACKET statement RIGHTBRACKET     { %2 } /** Неоднозначная грамматика.. Это ок? */
   ;
 
 
