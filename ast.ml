@@ -20,6 +20,7 @@ type expr =
   | AND of expr * expr
   | OR of expr * expr
   | NUMBER of numb
+  | VAR of var
 
 type instruction = 
   | ASSIGN of var * expr * pc 
@@ -30,6 +31,7 @@ type instruction =
 
 let rec string_of_expr expression = match expression with
   | NUMBER num -> string_of_int num
+  | VAR var -> var
   | PLUS (expr1, expr2) -> string_of_expr expr1 ^ " + " ^ string_of_expr expr2
   | MINUS (expr1, expr2) -> string_of_expr expr1 ^ " - " ^ string_of_expr expr2
   | MUL (expr1, expr2) -> string_of_expr expr1 ^ " * " ^ string_of_expr expr2
@@ -44,7 +46,7 @@ let rec string_of_expr expression = match expression with
   | AND (expr1, expr2) -> string_of_expr expr1 ^ " && " ^ string_of_expr expr2
   | OR (expr1, expr2) -> string_of_expr expr1 ^ " || " ^ string_of_expr expr2;;
 
-let rec string_of_instruction instruction = match instruction with
+let string_of_instruction instruction = match instruction with
   | ASSIGN (var, expr, pc) -> (string_of_int pc) ^ ". " ^ var ^ " := " ^ (string_of_expr expr)
   | WRITE (expr, pc) -> (string_of_int pc) ^ ". write " ^ (string_of_expr expr)
   | READ (var, pc) -> (string_of_int pc) ^ ". read " ^ var
