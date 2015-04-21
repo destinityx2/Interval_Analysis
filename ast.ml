@@ -53,6 +53,10 @@ let string_of_instruction instruction = match instruction with
   | WHILE (expr, pc, pc') -> (string_of_int pc) ^ ". while (" ^ (string_of_expr expr) ^ ")"
   | IF (expr, pc, pc') -> (string_of_int pc) ^ ". if (" ^ (string_of_expr expr) ^ ")";;
 
+let rec print_expressions list_of_expr = match list_of_expr with
+  | [] -> 
+  | head :: other_list -> print_string (string_of_expr head); print_string "\n"; print_expressions other_list;;
+
 (**
  *  Example of using: 
  *  1) print_string (string_of_expr (PLUS ( NUMBER 10, NUMBER 20 )));;
