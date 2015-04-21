@@ -1,6 +1,8 @@
 {
   open Parser
 
+  let cur_p = ref 0
+
   let get = Lexing.lexeme
 }
 
@@ -12,9 +14,9 @@ let variable = letter(letter|digit|'_')*
 let number = (digit)+
 
 rule token = parse
-  | ws | newline { token lexbuf }
+  | ws           { token lexbuf }
   | eof          { EOF }
-  (* | newline   { Lexing.new_line lexbuf; NEWLINE } *)
+  | newline      { Lexing.new_line lexbuf; token lexbuf }
   | "+"          { PLUS }
   | "-"          { MINUS }
   | "*"          { MUL }
@@ -37,8 +39,11 @@ rule token = parse
   | "if"         { IF }
   | "then"       { THEN }
   | "else"       { ELSE }
-  | ";"          { SEMICOLON }
+  | ";"          { cur_p := !cur_p + 1; SEMICOLON (!cur_p) }
   | variable     { VAR (get lexbuf) }
   | digit+       { INT (get lexbuf) }
   | "{"          { LEFTBRACKET }
   | "}"          { RIGHTBRACKET }
+
+
+  (*(lexbuf.lex_curr_p.pos_lnum)*)

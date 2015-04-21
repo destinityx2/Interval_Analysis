@@ -23,6 +23,7 @@ type expr =
   | VAR of var
 
 type instruction = 
+  | SKIP of pc
   | ASSIGN of var * expr * pc 
   | WRITE of expr * pc     
   | READ of var * pc
@@ -47,15 +48,22 @@ let rec string_of_expr expression = match expression with
   | OR (expr1, expr2) -> string_of_expr expr1 ^ " || " ^ string_of_expr expr2;;
 
 let string_of_instruction instruction = match instruction with
+  | SKIP (pc) -> (string_of_int pc) ^ ". skip"
   | ASSIGN (var, expr, pc) -> (string_of_int pc) ^ ". " ^ var ^ " := " ^ (string_of_expr expr)
   | WRITE (expr, pc) -> (string_of_int pc) ^ ". write " ^ (string_of_expr expr)
   | READ (var, pc) -> (string_of_int pc) ^ ". read " ^ var
   | WHILE (expr, pc, pc') -> (string_of_int pc) ^ ". while (" ^ (string_of_expr expr) ^ ")"
   | IF (expr, pc, pc') -> (string_of_int pc) ^ ". if (" ^ (string_of_expr expr) ^ ")";;
 
+let print_expression expr = print_string (string_of_expr expr);;
+
 let rec print_expressions list_of_expr = match list_of_expr with
-  | [] -> 
-  | head :: other_list -> print_string (string_of_expr head); print_string "\n"; print_expressions other_list;;
+  | [] -> print_string ""
+  | head :: other_list -> print_expression head; print_string "\n"; print_expressions other_list;;
+
+let rec print_instructions list_of_inst = match list_of_inst with
+  | [] -> print_string ""
+  | head :: other_list -> print_string (string_of_instruction head); print_newline (); print_instructions other_list;;
 
 (**
  *  Example of using: 

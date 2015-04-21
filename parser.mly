@@ -26,7 +26,7 @@
 %token IF
 %token THEN
 %token ELSE
-%token SEMICOLON
+%token <int> SEMICOLON
 %token NEWLINE
 %token LEFTBRACKET
 %token RIGHTBRACKET
@@ -41,15 +41,35 @@
 
 %start program
 
-%type <Ast.expr list> program
+%type <Ast.instruction list> program
 
 %%
 
-program: exprlist EOF                   { $1 }
+program: instrlist EOF                       { $1 }
 
-exprlist :                     			    { [] }
-		 | expr SEMICOLON exprlist          { $1 :: $3 }                             
+instrlist :                     			 { [] }
+		 | instr SEMICOLON instrlist          { 
+                                            match $1 with
+                                            | Ast.SKIP (a) -> Ast.SKIP($2) :: $3
+                                            | Ast.ASSIGN(a, b, c) -> Ast.ASSIGN(a, b, $2) :: $3
+                                            | Ast.WRITE (a, b) -> Ast.WRITE (a, $2) :: $3
+                                            | Ast.READ (a, b) -> Ast.READ (a, $2) :: $3
+                                            | Ast.WHILE(a, b, c) -> Ast.WHILE(a, $2 , $2) :: $3 
+                                            | Ast.IF(a, b, c) -> Ast.IF(a, $2, $2) :: $3
+                                          }                             
   ;
+  /** Исправить в While и If вторые параметры, т.к. они некорректно считаются*/
+  /** Переформировать в этом месте наши instruction. Сделать SEMICOLON аннотированным */
+
+instr :   | SKIP                                    { Ast.SKIP (0) }
+          | VAR ASSIGN expr                         { Ast.ASSIGN ($1, $3, 0) } 
+          | WRITE expr                              { Ast.WRITE ($2, 0) }
+          | READ VAR                                { Ast.READ ($2, 0) }
+          | WHILE expr DO LEFTBRACKET instrlist RIGHTBRACKET             { Ast.WHILE($2, 0, 0) }
+          | IF expr THEN LEFTBRACKET instrlist RIGHTBRACKET
+            ELSE LEFTBRACKET instrlist RIGHTBRACKET { Ast.IF ($2, 0, 0) }
+  ;
+
 
 expr : VAR                                          { Ast.VAR $1 }
      | INT                                          { Ast.NUMBER (int_of_string $1) }
