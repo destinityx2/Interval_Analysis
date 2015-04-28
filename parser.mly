@@ -1,5 +1,9 @@
 %{
 	open Ast
+
+
+	(** TODO: Создать здесь глобальный список result_list с типом Ast.instruction и все в него напихать. *)
+	let result_list = ref [Ast.SKIP (1); Ast.SKIP (0)];;
 %}
 
 %token <string> INT
@@ -21,15 +25,15 @@
 %token ASSIGN
 %token WRITE
 %token READ
-%token WHILE
+%token <int> WHILE
 %token DO
-%token IF
+%token <int> IF
 %token THEN
 %token ELSE
 %token <int> SEMICOLON
 %token NEWLINE
 %token LEFTBRACKET
-%token RIGHTBRACKET
+%token <int> RIGHTBRACKET
 %token EOF
 
 %right ASSIGN
@@ -45,29 +49,28 @@
 
 %%
 
-program: instrlist EOF                       { $1 }
+program: instrlist EOF                              {	
+														!result_list 
+													} 
 
-instrlist :                     			 { [] }
-		 | instr SEMICOLON instrlist          { 
-                                            match $1 with
-                                            | Ast.SKIP (a) -> Ast.SKIP($2) :: $3
-                                            | Ast.ASSIGN(a, b, c) -> Ast.ASSIGN(a, b, $2) :: $3
-                                            | Ast.WRITE (a, b) -> Ast.WRITE (a, $2) :: $3
-                                            | Ast.READ (a, b) -> Ast.READ (a, $2) :: $3
-                                            | Ast.WHILE(a, b, c) -> Ast.WHILE(a, $2 , $2) :: $3 
-                                            | Ast.IF(a, b, c) -> Ast.IF(a, $2, $2) :: $3
-                                          }                             
+																	/** Возвращаем глобальный список, но сначала 
+                                                                        сортируем его! 
+                                                                     */
+
+instrlist : | instr instrlist                       {  } /** Здесь ничего не делаем */
+			| instr                                 {  } /** Здесь ничего не делаем */
   ;
-  /** Исправить в While и If вторые параметры, т.к. они некорректно считаются*/
-  /** Переформировать в этом месте наши instruction. Сделать SEMICOLON аннотированным */
 
-instr :   | SKIP                                    { Ast.SKIP (0) }
-          | VAR ASSIGN expr                         { Ast.ASSIGN ($1, $3, 0) } 
-          | WRITE expr                              { Ast.WRITE ($2, 0) }
-          | READ VAR                                { Ast.READ ($2, 0) }
-          | WHILE expr DO LEFTBRACKET instrlist RIGHTBRACKET             { Ast.WHILE($2, 0, 0) }
-          | IF expr THEN LEFTBRACKET instrlist RIGHTBRACKET
-            ELSE LEFTBRACKET instrlist RIGHTBRACKET { Ast.IF ($2, 0, 0) }
+
+  /** TODO: Не возвращать здесь значения, а засовывать их сразу в глобальный список */
+
+instr :   | SKIP SEMICOLON                                     { result_list := !result_list :: Ast.SKIP ($2) }
+          | VAR ASSIGN expr SEMICOLON                          { result_list := !result_list :: Ast.ASSIGN ($4, $1, $3) } 
+          | WRITE expr SEMICOLON                               { result_list := !result_list :: Ast.WRITE ($3, $2) }
+          | READ VAR SEMICOLON                                 { result_list := !result_list :: Ast.READ ($3, $2) }
+          | WHILE expr DO LEFTBRACKET instr RIGHTBRACKET       { result_list := !result_list :: Ast.WHILE($1, $2, $6 + 1) }
+          | IF expr THEN LEFTBRACKET instr RIGHTBRACKET
+            ELSE LEFTBRACKET instr RIGHTBRACKET                { result_list := !result_list :: Ast.IF ($1, $2, $6 + 1) }
   ;
 
 

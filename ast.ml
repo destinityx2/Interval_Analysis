@@ -24,11 +24,11 @@ type expr =
 
 type instruction = 
   | SKIP of pc
-  | ASSIGN of var * expr * pc 
-  | WRITE of expr * pc     
-  | READ of var * pc
-  | WHILE of expr * pc * pc
-  | IF of expr * pc * pc
+  | ASSIGN of pc * var * expr
+  | WRITE of pc * expr
+  | READ of pc * var 
+  | WHILE of pc * expr * pc (* The second pc - pc after '}' *)
+  | IF of pc * expr * pc
 
 let rec string_of_expr expression = match expression with
   | NUMBER num -> string_of_int num
@@ -49,11 +49,11 @@ let rec string_of_expr expression = match expression with
 
 let string_of_instruction instruction = match instruction with
   | SKIP (pc) -> (string_of_int pc) ^ ". skip"
-  | ASSIGN (var, expr, pc) -> (string_of_int pc) ^ ". " ^ var ^ " := " ^ (string_of_expr expr)
-  | WRITE (expr, pc) -> (string_of_int pc) ^ ". write " ^ (string_of_expr expr)
-  | READ (var, pc) -> (string_of_int pc) ^ ". read " ^ var
-  | WHILE (expr, pc, pc') -> (string_of_int pc) ^ ". while (" ^ (string_of_expr expr) ^ ")"
-  | IF (expr, pc, pc') -> (string_of_int pc) ^ ". if (" ^ (string_of_expr expr) ^ ")";;
+  | ASSIGN (pc, var, expr) -> (string_of_int pc) ^ ". " ^ var ^ " := " ^ (string_of_expr expr)
+  | WRITE (pc, expr) -> (string_of_int pc) ^ ". write " ^ (string_of_expr expr)
+  | READ (pc, var) -> (string_of_int pc) ^ ". read " ^ var
+  | WHILE (pc, expr, pc') -> (string_of_int pc) ^ ". while (" ^ (string_of_expr expr) ^ ")"
+  | IF (pc, expr, pc') -> (string_of_int pc) ^ ". if (" ^ (string_of_expr expr) ^ ")";;
 
 let print_expression expr = print_string (string_of_expr expr);;
 

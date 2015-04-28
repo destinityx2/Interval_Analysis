@@ -34,16 +34,16 @@ rule token = parse
   | ":="         { ASSIGN }
   | "write"      { WRITE }
   | "read"       { READ }
-  | "while"      { WHILE }
+  | "while"      { cur_p := !cur_p + 1; WHILE (!cur_p) }
   | "do"         { DO }
-  | "if"         { IF }
+  | "if"         { cur_p := !cur_p + 1; IF (!cur_p) }
   | "then"       { THEN }
   | "else"       { ELSE }
   | ";"          { cur_p := !cur_p + 1; SEMICOLON (!cur_p) }
   | variable     { VAR (get lexbuf) }
   | digit+       { INT (get lexbuf) }
   | "{"          { LEFTBRACKET }
-  | "}"          { RIGHTBRACKET }
+  | "}"          { cur_p := !cur_p + 1; RIGHTBRACKET (!cur_p) }
 
 
   (*(lexbuf.lex_curr_p.pos_lnum)*)
