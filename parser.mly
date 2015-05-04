@@ -1,6 +1,7 @@
 %{
 	open Ast
 
+
 	(** TODO: Создать здесь глобальный список result_list с типом Ast.instruction и все в него напихать. *)
 	let result_list = ref [];;
 
