@@ -8,7 +8,7 @@ if x == 3 then
 {
 	y := 5;
 	x := 12;
-	HelLo_worlD12 := x+y - 	a32a;
+	HelLo_worlD12 := x+y - 32;
 }
 
 z := 1;

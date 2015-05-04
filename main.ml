@@ -4,5 +4,6 @@ open Lexer
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
-  let result = Parser.program Lexer.token lexbuf in
-  Ast.print_instructions result;;
+  let prog = Parser.program Lexer.token lexbuf in
+  Eval.run prog;;
+  (*Ast.print_instructions prog;;*)
