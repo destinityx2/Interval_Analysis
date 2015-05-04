@@ -1,5 +1,5 @@
 prog: lexer.cmo parser.cmo main.cmo ast.cmo 
-	ocamlc -o prog lexer.cmo parser.cmo ast.cmo main.cmo
+	ocamlc -o prog lexer.cmo ast.cmo parser.cmo main.cmo
 
 lexer.cmo: lexer.ml
 	ocamlc -c lexer.ml

@@ -22,6 +22,7 @@ type expr =
   | NUMBER of numb
   | VAR of var
 
+
 type instruction = 
   | SKIP of pc
   | ASSIGN of pc * var * expr
@@ -29,7 +30,8 @@ type instruction =
   | READ of pc * var 
   | WHILE of pc * expr * pc (* The second pc - pc after '}' *)
   | IF of pc * expr * pc
-
+  | RIGHTBRACKET of pc * pc
+  
 let rec string_of_expr expression = match expression with
   | NUMBER num -> string_of_int num
   | VAR var -> var
@@ -53,7 +55,8 @@ let string_of_instruction instruction = match instruction with
   | WRITE (pc, expr) -> (string_of_int pc) ^ ". write " ^ (string_of_expr expr)
   | READ (pc, var) -> (string_of_int pc) ^ ". read " ^ var
   | WHILE (pc, expr, pc') -> (string_of_int pc) ^ ". while (" ^ (string_of_expr expr) ^ ")"
-  | IF (pc, expr, pc') -> (string_of_int pc) ^ ". if (" ^ (string_of_expr expr) ^ ")";;
+  | IF (pc, expr, pc') -> (string_of_int pc) ^ ". if (" ^ (string_of_expr expr) ^ ")"
+  | RIGHTBRACKET (pc, pc') -> (string_of_int pc) ^ ". }";;
 
 let print_expression expr = print_string (string_of_expr expr);;
 
@@ -65,6 +68,15 @@ let rec print_instructions list_of_inst = match list_of_inst with
   | [] -> print_string ""
   | head :: other_list -> print_string (string_of_instruction head); print_newline (); print_instructions other_list;;
 
+let get_pc instr = match instr with
+  | SKIP (pc) -> pc
+  | ASSIGN (pc, var, expr) -> pc
+  | WRITE (pc, expr) -> pc
+  | READ (pc, var) -> pc
+  | WHILE (pc, expr, pc') -> pc
+  | IF (pc, expr, pc') -> pc
+  | RIGHTBRACKET (pc, pc') -> pc
+
 (**
  *  Example of using: 
  *  1) print_string (string_of_expr (PLUS ( NUMBER 10, NUMBER 20 )));;
@@ -75,24 +87,3 @@ let rec print_instructions list_of_inst = match list_of_inst with
  *
  *     print_string (string_of_expr (expr3));; 
  *)
-
-(*
-let var_to_string v = match v with
-  | X -> "x" | Y -> "y" | Z -> "z"
-
-let inst_to_string i = match i with
-  | INC v -> "inc " ^ (var_to_string v)
-  | DEC v -> "dec " ^ (var_to_string v)
-  | ZERO (v,pc,pc') -> "zero " ^ (var_to_string v) ^ " " ^ 
-      (string_of_int pc) ^ " else " ^ (string_of_int pc')
-  | STOP -> "stop"
-
-let prettyprint is = 
-  let rec printlist line is = match is with
-    | [] -> print_newline ()
-    | i::is' ->
-	Printf.printf "%3i: %s" line (inst_to_string i);
-	print_newline ();
-	printlist (line+1) is' in
-    printlist 1 is
-*)
