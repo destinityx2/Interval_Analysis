@@ -1,7 +1,7 @@
 x := 2 + 3;
 y := x + 1;
 
-if x == 3 then
+if x >= 3 then
 {
 	x := 1;
 } else
@@ -12,3 +12,8 @@ if x == 3 then
 }
 
 z := 1;
+
+while x <= 10 do {
+	z := z + 1;
+	x := x + 2;
+}
