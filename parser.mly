@@ -1,6 +1,10 @@
 %{
-	open Ast
+	open Ast;;
+	let var_set = ref [];;
 
+	let f res e = if List.mem e res then res else e::res;;
+	let unique lst = List.fold_left f [] lst;;
+	
 
 	(** TODO: Создать здесь глобальный список result_list с типом Ast.instruction и все в него напихать. *)
 	let result_list = ref [];;
@@ -48,14 +52,15 @@
 
 %start program
 
-%type <Ast.instruction list> program
+%type < Ast.instruction list * string list  > program
 
 %%
 
-program: instrlist EOF    {
-                            result_list := List.sort compare !result_list;
-							!result_list 
-					      } 
+program: | instrlist   {
+							result_list := List.sort compare !result_list;
+							(!result_list, unique !var_set)
+					      }
+		 | EOF { (!result_list,!var_set) }
 
 instrlist : | instr instrlist                       {  } /** Здесь ничего не делаем */
 			| instr                                 {  } /** Здесь ничего не делаем */
@@ -65,9 +70,9 @@ instrlist : | instr instrlist                       {  } /** Здесь ниче
   /** TODO: Не возвращать здесь значения, а засовывать их сразу в глобальный список */
 
 instr :   | SKIP SEMICOLON                                     { result_list := Ast.SKIP ($2) :: !result_list   }
-          | VAR ASSIGN expr SEMICOLON                          { result_list := Ast.ASSIGN ($4, $1, $3) :: !result_list } 
+          | VAR ASSIGN expr SEMICOLON                          { result_list := Ast.ASSIGN ($4, $1, $3) :: !result_list; var_set := $1 :: !var_set } 
           | WRITE expr SEMICOLON                               { result_list := Ast.WRITE ($3, $2) :: !result_list }
-          | READ VAR SEMICOLON                                 { result_list := Ast.READ ($3, $2) :: !result_list }
+          | READ VAR SEMICOLON                                 { result_list := Ast.READ ($3, $2) :: !result_list; var_set := $2 :: !var_set }
           | WHILE expr DO LEFTBRACKET instrlist RIGHTBRACKET   { result_list := Ast.WHILE($1, $2, $6 + 1) :: !result_list;
                                                                  result_list := Ast.RIGHTBRACKET($6, $1) :: !result_list }
           | IF expr THEN LEFTBRACKET instrlist RIGHTBRACKET

@@ -3,10 +3,12 @@ open Parser
 open Lexer
 open Printf
 
+
 let run chn trace interval eval input_arr = 
 	let lexbuf = Lexing.from_channel chn in
-  	let prog = Parser.program Lexer.token lexbuf in
-  	if trace then
+  	let (prog, var_set) = Parser.program Lexer.token lexbuf in
+  	begin 
+  	(if trace then
   		Ast.print_instructions prog
   	else if interval then 
   	begin
@@ -14,6 +16,15 @@ let run chn trace interval eval input_arr =
   	end
   	else if eval then
   		Eval.run prog input_arr
+  	);
+  	let print_var s = 
+  	begin
+		print_string (s); 
+		print_newline ()
+  	end
+  	in
+  	List.iter print_var var_set
+  	end
   
 let _ =
     let trace = ref false in
