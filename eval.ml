@@ -42,9 +42,11 @@ in
 
 (*
 	run interp.
-	prog - list of instructions
+	prog  - list of instructions
+	input - list of input values 
 *)
-let run prog = 
+let run prog input = 
+	let cur_in = ref 0 in
 	let sym_table = Hashtbl.create 17 in
 	
 	let step line = match List.nth prog (line - 1) with
@@ -61,7 +63,12 @@ let run prog =
 				print_newline ();
 				pc + 1
 			end
-		| READ (pc, var) -> pc + 1 (* TODO: read *)
+		| READ (pc, var) -> 
+			begin
+				Hashtbl.replace sym_table var (List.nth input !cur_in);
+				cur_in := !cur_in + 1;
+				pc + 1 
+			end
 		| IF (pc, expr, pc') | WHILE (pc, expr, pc') ->
 			begin
 				if bool_of_int (compute expr sym_table) then pc + 1

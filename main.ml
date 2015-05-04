@@ -1,8 +1,9 @@
 open Ast
 open Parser
 open Lexer
+open Printf
 
-let run chn trace interval = 
+let run chn trace interval eval input_arr = 
 	let lexbuf = Lexing.from_channel chn in
   	let prog = Parser.program Lexer.token lexbuf in
   	if trace then
@@ -11,32 +12,29 @@ let run chn trace interval =
   	begin
   		(* run interval analysis *)
   	end
-  	else 	 
-  		Eval.run prog
+  	else if eval then
+  		Eval.run prog input_arr
   
 let _ =
     let trace = ref false in
 	let interval = ref false in	
-    let filenum  = ref 0 in
-    let speclist = [
-		    ("-trace", Arg.Set trace, "Trace instr. list, default is false");
-		    ("-interval", Arg.Set interval, "Interval analysis execution, default is false")] in               
-    let usagestr = "Usage: " ^ Sys.argv.(0) ^ " [options] <filename>" in
-	if not (!Sys.interactive) then
-      begin
-      	Arg.parse speclist
-	  	(fun s -> try
-  		      let inch = open_in s in
-		      incr filenum;
-		      print_string ("Opening file \"" ^ s ^ "\"\n\n");
-		      run inch !trace !interval;
-		      close_in inch;
-		      exit 0
-  	            with Sys_error e -> raise (Arg.Bad e)
-	  	) usagestr;
-		(if !filenum != 1 then Arg.usage speclist usagestr else ())
-      end
-    else ()
+	let eval = ref false in
+	let inch = open_in Sys.argv.(1) in  (* input file *)
+	let input_arr = ref [] in           (* input values *)
+	begin
+		(match Sys.argv.(2) with
+			| "-eval" -> eval := true
+			| "-interval" -> interval := true
+			| "-trace" -> trace := true
+			| _ -> exit 0
+		);
+		(for i = 3 to  Array.length Sys.argv - 1 do
+			input_arr := !input_arr @ [int_of_string Sys.argv.(i)]
+		done);
+		run inch !trace !interval !eval !input_arr;
+		close_in inch;
+		exit 0
+	end
 
 
   

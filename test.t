@@ -1,5 +1,5 @@
-x := 2 + 3;
-y := x + 1;
+read x;
+read y;
 
 if x >= 3 then
 {
