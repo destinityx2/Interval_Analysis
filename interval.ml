@@ -20,7 +20,7 @@ let func op (l, r) (l', r') =
 (* == *)
 let eq (l, r) (l', r') = 
 	if l > r' || r < l' then (infinity,neg_infinity)
-	else (min l l', min r r')
+	else (max l l', min r r')
 	
 (* <= *)
 let le (l, r) (l', r') =
