@@ -2,28 +2,32 @@ open Ast
 open Parser
 open Lexer
 open Printf
+open Analysis
 
 
 let run chn trace interval eval input_arr = 
 	let lexbuf = Lexing.from_channel chn in
   	let (prog, var_set) = Parser.program Lexer.token lexbuf in
   	begin 
-  	(if trace then
+  	if trace then
   		Ast.print_instructions prog
   	else if interval then 
   	begin
   		(* run interval analysis *)
+  		let res = 
+  		  Analysis.analysis prog (Analysis.apx (List.length prog) var_set)
+  		in
+  		Analysis.print_apx res Analysis.it_to_str
   	end
   	else if eval then
   		Eval.run prog input_arr
-  	);
-  	let print_var s = 
+  	(*let print_var s = 
   	begin
 		print_string (s); 
 		print_newline ()
   	end
   	in
-  	List.iter print_var var_set
+  	List.iter print_var var_set*)
   	end
   
 let _ =

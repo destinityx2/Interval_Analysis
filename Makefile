@@ -1,6 +1,9 @@
-prog: lexer.cmo parser.cmo ast.cmo eval.cmo main.cmo 
-	ocamlc -o prog lexer.cmo ast.cmo parser.cmo eval.cmo main.cmo
+prog: lexer.cmo parser.cmo ast.cmo eval.cmo interval.cmo analysis.cmo main.cmo 
+	ocamlc -o prog lexer.cmo ast.cmo parser.cmo eval.cmo interval.cmo analysis.cmo main.cmo
 
+interval.cmo: interval.ml
+	ocamlc -c interval.ml
+	
 lexer.cmo: lexer.ml
 	ocamlc -c lexer.ml
 
@@ -16,6 +19,9 @@ parser.ml: parser.mly ast.cmo
 
 ast.cmo: ast.ml
 	ocamlc -c ast.ml
+	
+analysis.cmo: analysis.ml ast.ml interval.ml
+	ocamlc -c analysis.ml
 
 eval.cmo: eval.ml ast.ml
 	ocamlc -c eval.ml

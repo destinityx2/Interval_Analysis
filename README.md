@@ -16,4 +16,15 @@ list of integers:
 
 	value for 'read x;' instr.
 	
+
+ATTENTION: 
+
+	you should follow the rules in case of using -interval option 
+	
+RULES:
+
+	- NO &&,|| operators
+	- format of logical expression 
+		VAR op AE, where VAR - variable, 
+		op - logical operator, AE - arithmetic expression
 	
