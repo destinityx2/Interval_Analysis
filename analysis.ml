@@ -129,8 +129,8 @@ let analysis prog fapx =
 			for i = 0 to ((List.length prog) - 1) do
 			begin
 				step prog cur_apx i;
-				print_apx !cur_apx it_to_str;
-				Printf.printf "\n"	
+				(*print_apx !cur_apx it_to_str;
+				Printf.printf "\n"*)	
 			end
 			done;
 			(* if current apx equal to previous apx *)
