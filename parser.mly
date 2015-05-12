@@ -1,20 +1,37 @@
 %{
 	open Ast;;
+  open Hashtbl;;
 	let var_set = ref [];;
 
 	let f res e = if List.mem e res then res else e::res;;
 	let unique lst = List.fold_left f [] lst;;
 	
-
 	(** TODO: Создать здесь глобальный список result_list с типом Ast.instruction и все в него напихать. *)
 	let result_list = ref [];;
 
   let compare x y =
     if (Ast.get_pc x) < (Ast.get_pc y) then -1 else if (Ast.get_pc x) == (Ast.get_pc y) then 0 else 1;;
+
+  let cur_index = ref 0;;
+
+  let tmp_list = ref [];;
+  let renumerate instr = match instr with
+    | SKIP (pc) -> begin cur_index := !cur_index + 1; tmp_list := SKIP(!cur_index) :: !tmp_list end
+    | ASSIGN (pc, var, expr) -> begin cur_index := !cur_index + 1; tmp_list := ASSIGN(!cur_index, var, expr) :: !tmp_list end
+    | WRITE (pc, expr) -> begin cur_index := !cur_index + 1; tmp_list := WRITE(!cur_index, expr) :: !tmp_list end
+    | READ (pc, var) -> begin cur_index := !cur_index + 1; tmp_list := READ(!cur_index, var) :: !tmp_list end
+    | WHILE (pc, expr, pc') -> begin cur_index := !cur_index + 1; tmp_list := WHILE(!cur_index, expr, !cur_index + pc' - pc) :: !tmp_list end
+    | IF (pc, expr, pc') -> begin cur_index := !cur_index + 1; tmp_list := IF(!cur_index, expr, !cur_index + pc' - pc) :: !tmp_list end
+    | FUNC (pc, var, var_list) -> begin cur_index := !cur_index + 1; tmp_list := FUNC(!cur_index, var, var_list) :: !tmp_list end
+    | RIGHTBRACKET (pc, pc') -> begin cur_index := !cur_index + 1; tmp_list := RIGHTBRACKET(!cur_index, !cur_index + pc' - pc) :: !tmp_list end;;
+
+  let hash_table = Hashtbl.create 123;;
 %}
 
 %token <string> INT
 %token <string> VAR
+%token COMMA
+%token FUN
 %token PLUS
 %token MINUS
 %token MUL
@@ -41,6 +58,8 @@
 %token NEWLINE
 %token LEFTBRACKET
 %token <int> RIGHTBRACKET
+%token <int> LEFTPARENTHESIS
+%token RIGHTPARENTHESIS
 %token EOF
 
 %right ASSIGN
@@ -52,20 +71,46 @@
 
 %start program
 
+/*
 %type < Ast.instruction list * string list  > program
+*/
+%type < (string, Ast.instruction list * string list * Ast.expr list ) Hashtbl.t > program
 
 %%
 
-program: | instrlist   {
-							result_list := List.sort compare !result_list;
-							(!result_list, unique !var_set)
-					      }
-		 | EOF { (!result_list,!var_set) }
-
-instrlist : | instr instrlist                       {  } /** Здесь ничего не делаем */
-			| instr                                 {  } /** Здесь ничего не делаем */
+program: | func_list              { hash_table }
+         | EOF                    { hash_table } 
   ;
 
+/*
+program: | instrlist   {
+							           result_list := List.sort compare !result_list;
+							           (!result_list, unique !var_set)
+					             }
+		     | EOF         { (!result_list,!var_set) }
+*/
+
+instrlist : | instr instrlist                       {  } /** Здесь ничего не делаем */
+			      | instr                                 {  } /** Здесь ничего не делаем */
+  ;
+
+func_list: | func_definition func_list             {  }
+           | func_definition                       {  }
+  ;
+
+func_definition: FUN VAR LEFTPARENTHESIS var_list RIGHTPARENTHESIS
+                 LEFTBRACKET instrlist RIGHTBRACKET                {  
+                                                                     result_list := List.sort compare !result_list;
+                                                                     cur_index := 0;
+                                                                     List.iter renumerate !result_list;
+                                                                     result_list := !tmp_list;
+                                                                     result_list := List.rev !result_list;
+                                                                     Hashtbl.add hash_table $2 (!result_list, unique !var_set, $4);
+                                                                     tmp_list := [];
+                                                                     result_list := [];
+                                                                     var_set := []
+                                                                   }
+  ;
 
   /** TODO: Не возвращать здесь значения, а засовывать их сразу в глобальный список */
 
@@ -77,10 +122,18 @@ instr :   | SKIP SEMICOLON                                     { result_list := 
                                                                  result_list := Ast.RIGHTBRACKET($6, $1) :: !result_list }
           | IF expr THEN LEFTBRACKET instrlist RIGHTBRACKET
             ELSE LEFTBRACKET instrlist RIGHTBRACKET            { result_list := Ast.IF ($1, $2, $6 + 1) :: !result_list;
-            													 result_list := Ast.RIGHTBRACKET($10, $10 + 1) :: !result_list;
+                                      													 result_list := Ast.RIGHTBRACKET($10, $10 + 1) :: !result_list;
                                                                  result_list := Ast.RIGHTBRACKET($6, $10 + 1) :: !result_list }
+          | VAR LEFTPARENTHESIS var_list RIGHTPARENTHESIS
+            SEMICOLON                                           {
+                                                                  result_list := Ast.FUNC ($2, $1, $3) :: !result_list
+                                                                }
   ;
 
+
+var_list :  expr COMMA var_list                       { $1 :: $3 }
+         |  expr                                      { $1 :: [] } /** ИЗМЕНИТЬ! Добавить возможность пустого списка переменных */
+  ;
 
 expr : VAR                                          { Ast.VAR $1 }
      | INT                                          { Ast.NUMBER (int_of_string $1) }

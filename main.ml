@@ -4,7 +4,7 @@ open Lexer
 open Printf
 open Analysis
 
-
+(*
 let run chn trace interval eval input_arr = 
 	let lexbuf = Lexing.from_channel chn in
   	let (prog, var_set) = Parser.program Lexer.token lexbuf in
@@ -29,13 +29,23 @@ let run chn trace interval eval input_arr =
   	in
   	List.iter print_var var_set*)
   	end
-  
+*)
+
+
 let _ =
+(*
     let trace = ref false in
 	let interval = ref false in	
 	let eval = ref false in
 	let inch = open_in Sys.argv.(1) in  (* input file *)
 	let input_arr = ref [] in           (* input values *)
+*)
+	let lexbuf = Lexing.from_channel stdin in
+	let hasht = Parser.program Lexer.token lexbuf in
+	let (b, c, d) = Hashtbl.find hasht "HelloWorld" in
+	Ast.print_instructions b;;
+	
+	(*
 	begin
 		(match Sys.argv.(2) with
 			| "-eval" -> eval := true
@@ -50,6 +60,4 @@ let _ =
 		close_in inch;
 		exit 0
 	end
-
-
-  
+	*)

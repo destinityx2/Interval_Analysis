@@ -1,19 +1,46 @@
-read x;
-read y;
+fun main (x, y, z)
+{
+	read n;
 
-if x >= 3 then
-{
 	x := 1;
-} else
-{
-	y := 5;
-	x := 12;
-	HelLo_worlD12 := x+y - 32;
+	y := 1;
+
+	answer := 0;
+	counter := 2;
+
+	m (x, y, z*2 + 1 * x + 3);
+
+	while counter < n do
+	{
+		answer := x + y;
+		x := y;
+		y := answer;
+		counter := counter + 1;
+	}
+
+	write answer;
 }
 
-z := 1;
+fun main2 (x, y, z, k)
+{
+	answer := 0;
+	counter := 2;
 
-while x <= 10 do {
-	z := z + 1;
-	x := x + 2;
+	m (x, y, z*2 + 1 * x + 3);
+
+	while counter < n do
+	{
+		answer := x + y;
+		x := y;
+		y := answer;
+		counter := counter + 1;
+	}
+
+	write answer;	
+}
+
+fun HelloWorld(x)
+{
+	x := 1;
+	y := 2;
 }

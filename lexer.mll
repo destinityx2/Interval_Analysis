@@ -39,11 +39,15 @@ rule token = parse
   | "if"         { cur_p := !cur_p + 1; IF (!cur_p) }
   | "then"       { THEN }
   | "else"       { ELSE }
+  | "fun"        { FUN }
   | ";"          { cur_p := !cur_p + 1; SEMICOLON (!cur_p) }
+  | ","          { COMMA }
   | variable     { VAR (get lexbuf) }
   | digit+       { INT (get lexbuf) }
   | "{"          { LEFTBRACKET }
   | "}"          { cur_p := !cur_p + 1; RIGHTBRACKET (!cur_p) }
+  | "("          { cur_p := !cur_p + 1; LEFTPARENTHESIS (!cur_p) }
+  | ")"          { RIGHTPARENTHESIS }
 
 
   (*(lexbuf.lex_curr_p.pos_lnum)*)
