@@ -6,53 +6,41 @@ open Analysis
 
 open Printf
 
-(*
-let run chn trace interval eval input_arr = 
+
+let run chn trace interval eval input_arr =
+		
 	let lexbuf = Lexing.from_channel chn in
-  	let (prog, var_set) = Parser.program Lexer.token lexbuf in
+	let hasht = Parser.program Lexer.token lexbuf in
   	begin 
   	if trace then
-  		Ast.print_instructions prog
+		let (instr_lst, var_set, arg_list) = Hashtbl.find hasht "main" in
+  		Ast.print_instructions instr_lst
   	else if interval then 
   	begin
   		(* run interval analysis *)
-  		let res = 
+  		(*let res = 
   		  Analysis.analysis prog (Analysis.apx (List.length prog) var_set)
   		in
-  		Analysis.print_apx res Analysis.it_to_str
+  		Analysis.print_apx res Analysis.it_to_str*)
   	end
   	else if eval then
-  		Eval.run prog input_arr
-  	(*let print_var s = 
-  	begin
-		print_string (s); 
-		print_newline ()
+	begin
+  		let fl k v = Hashtbl.replace Eval.func_tbl k v in
+		Hashtbl.iter fl hasht;
+		Eval.input := input_arr;
+		Eval.call "main" []
+	end
   	end
-  	in
-  	List.iter print_var var_set*)
-  	end
-*)
 
 
 let _ =
-(*
+
     let trace = ref false in
 	let interval = ref false in	
 	let eval = ref false in
 	let inch = open_in Sys.argv.(1) in  (* input file *)
 	let input_arr = ref [] in           (* input values *)
-*)
-	let lexbuf = Lexing.from_channel stdin in
-	let hasht = Parser.program Lexer.token lexbuf in
-	(*let (instr_lst, var_set, arg_list) = Hashtbl.find hasht "main" in*)
-	begin
-		(*Ast.print_instructions b*)
-		let fl k v = Hashtbl.replace Eval.func_tbl k v in
-		Hashtbl.iter fl hasht;
-		Eval.call "main" []
-	end
 	
-	(*
 	begin
 		(match Sys.argv.(2) with
 			| "-eval" -> eval := true
@@ -67,4 +55,3 @@ let _ =
 		close_in inch;
 		exit 0
 	end
-	*)

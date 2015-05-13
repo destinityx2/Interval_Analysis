@@ -1,6 +1,7 @@
 fun main ()
 {
-	x := fib(6);
+	read n;
+	x := fib(n);
 	write x;
 }
 

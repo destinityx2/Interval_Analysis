@@ -10,7 +10,7 @@ let apx p_len vars =
 		let apx = Array.make (p_len+1) (Hashtbl.create 0) in
 		(for i = 0 to (Array.length apx) - 1 do 
 		begin
-			apx.(i) <- Hashtbl.create 17; (* TODO: Fix it on List.length vars *)
+			apx.(i) <- Hashtbl.create (List.length vars); 
 			List.iter ( add apx.(i) ) vars
 		end
 		done);
@@ -88,7 +88,7 @@ let step prog ref_apx i = match List.nth prog i with
 		begin
 			let j = pc in (* j = pc + 1 *)
 			let cr = compute_ar expr !ref_apx.(i) in
-			Hashtbl.replace !ref_apx.(i) var cr; (* TODO: Make a join instead of assign *)
+			Hashtbl.replace !ref_apx.(i) var (Interval.join cr (Hashtbl.find !ref_apx.(i) var));
 			merge' !ref_apx.(i) !ref_apx.(j);
 			()
 		end
@@ -97,7 +97,8 @@ let step prog ref_apx i = match List.nth prog i with
 		begin
 			let j = pc in (* j = pc + 1 *)
 			let top = (neg_infinity, infinity) in
-			Hashtbl.replace !ref_apx.(i) var top; (* TODO: Make a merge. Copy 92 line *)
+			merge' !ref_apx.(i) !ref_apx.(j);
+			Hashtbl.replace !ref_apx.(i) var top; 
 			Hashtbl.replace !ref_apx.(j) var top
 		end 
 	| IF (pc, expr, pc') | WHILE (pc, expr, pc') -> 
@@ -105,10 +106,10 @@ let step prog ref_apx i = match List.nth prog i with
 			let j = pc in
 			let k = pc' - 1 in
 			let (var,(t,f)) = compute_lg expr !ref_apx.(i) in
-			merge' !ref_apx.(i) !ref_apx.(j); (* 108-109, 110-111 - merge+replace *)
-			Hashtbl.replace !ref_apx.(j) var t;
+			merge' !ref_apx.(i) !ref_apx.(j); 
+			Hashtbl.replace !ref_apx.(j) var (Interval.join t (Hashtbl.find !ref_apx.(j) var));
 			merge' !ref_apx.(i) !ref_apx.(k);
-			Hashtbl.replace !ref_apx.(k) var f
+			Hashtbl.replace !ref_apx.(k) var (Interval.join f (Hashtbl.find !ref_apx.(k) var));
 		end
 	| RIGHTBRACKET (pc, pc') -> merge' !ref_apx.(pc-1) !ref_apx.(pc'-1)
 	

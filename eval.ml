@@ -5,6 +5,9 @@ open Stack
 let call_stack = Stack.create ()
 let func_tbl : (Ast.var, Ast.instruction list * Ast.var list * Ast.var list) Hashtbl.t = Hashtbl.create 0
 
+let cur_in = ref 0
+let input = ref []
+
 let bool_to_int b = if b then 1 else 0
 let bool_of_int i = if i > 0 then true else false
 
@@ -84,8 +87,8 @@ and step instr sym_table = match instr with
 			end
 		| READ (pc, var) -> 
 			begin
-				(*Hashtbl.replace sym_table var (List.nth input !cur_in);
-				cur_in := !cur_in + 1;*)
+				Hashtbl.replace sym_table var (List.nth !input !cur_in);
+				cur_in := !cur_in + 1;
 				(pc + 1,true) 
 			end
 		| IF (pc, expr, pc') | WHILE (pc, expr, pc') ->
