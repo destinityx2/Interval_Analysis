@@ -42,7 +42,7 @@ let _ =
 *)
 	let lexbuf = Lexing.from_channel stdin in
 	let hasht = Parser.program Lexer.token lexbuf in
-	let (b, c, d) = Hashtbl.find hasht "HelloWorld" in
+	let (b, c, d) = Hashtbl.find hasht "main" in
 	Ast.print_instructions b;;
 	
 	(*

@@ -21,6 +21,7 @@ type expr =
   | OR of expr * expr
   | NUMBER of numb
   | VAR of var
+  | FUNC of var * expr list
 
 type instruction = 
   | SKIP of pc
@@ -29,12 +30,23 @@ type instruction =
   | READ of pc * var 
   | WHILE of pc * expr * pc (* The second pc - pc after '}' *)
   | IF of pc * expr * pc
-  | FUNC of pc * var * expr list
   | RIGHTBRACKET of pc * pc
+  | RETURN of pc * expr
   
+
 let rec string_of_expr expression = match expression with
   | NUMBER num -> string_of_int num
   | VAR var -> var
+  | FUNC (var, expr_list) -> begin 
+                              
+                              let rec string_of_expr_list expression_list = match expression_list with
+                              | last_elem :: [] -> string_of_expr last_elem
+                              | head :: tail -> string_of_expr head ^ ", " ^ string_of_expr_list tail
+                              | [] -> "" in
+
+                              var ^ "(" ^ string_of_expr_list expr_list ^ ")"
+
+                             end
   | PLUS (expr1, expr2) -> string_of_expr expr1 ^ " + " ^ string_of_expr expr2
   | MINUS (expr1, expr2) -> string_of_expr expr1 ^ " - " ^ string_of_expr expr2
   | MUL (expr1, expr2) -> string_of_expr expr1 ^ " * " ^ string_of_expr expr2
@@ -49,11 +61,6 @@ let rec string_of_expr expression = match expression with
   | AND (expr1, expr2) -> string_of_expr expr1 ^ " && " ^ string_of_expr expr2
   | OR (expr1, expr2) -> string_of_expr expr1 ^ " || " ^ string_of_expr expr2;;
 
-let rec string_of_expr_list expr_list = match expr_list with
-  | last_elem :: [] -> string_of_expr last_elem
-  | head :: tail -> string_of_expr head ^ ", " ^ string_of_expr_list tail
-  | [] -> ""
-
 let string_of_instruction instruction = match instruction with
   | SKIP (pc) -> (string_of_int pc) ^ ". skip"
   | ASSIGN (pc, var, expr) -> (string_of_int pc) ^ ". " ^ var ^ " := " ^ (string_of_expr expr)
@@ -61,7 +68,7 @@ let string_of_instruction instruction = match instruction with
   | READ (pc, var) -> (string_of_int pc) ^ ". read " ^ var
   | WHILE (pc, expr, pc') -> (string_of_int pc) ^ ". while (" ^ (string_of_expr expr) ^ ")"
   | IF (pc, expr, pc') -> (string_of_int pc) ^ ". if (" ^ (string_of_expr expr) ^ ")"
-  | FUNC (pc, var, expr_list) -> (string_of_int pc) ^ ". " ^ var ^ "(" ^ string_of_expr_list expr_list ^ ")"
+  | RETURN (pc, expr) -> (string_of_int pc) ^ ". return " ^ (string_of_expr expr)
   | RIGHTBRACKET (pc, pc') -> (string_of_int pc) ^ ". }";;
 
 let print_expression expr = print_string (string_of_expr expr);;
@@ -81,8 +88,8 @@ let get_pc instr = match instr with
   | READ (pc, var) -> pc
   | WHILE (pc, expr, pc') -> pc
   | IF (pc, expr, pc') -> pc
-  | FUNC (pc, var, var_list) -> pc
   | RIGHTBRACKET (pc, pc') -> pc
+  | RETURN (pc, expr) -> pc
 
 (**
  *  Example of using: 

@@ -22,7 +22,7 @@
     | READ (pc, var) -> begin cur_index := !cur_index + 1; tmp_list := READ(!cur_index, var) :: !tmp_list end
     | WHILE (pc, expr, pc') -> begin cur_index := !cur_index + 1; tmp_list := WHILE(!cur_index, expr, !cur_index + pc' - pc) :: !tmp_list end
     | IF (pc, expr, pc') -> begin cur_index := !cur_index + 1; tmp_list := IF(!cur_index, expr, !cur_index + pc' - pc) :: !tmp_list end
-    | FUNC (pc, var, var_list) -> begin cur_index := !cur_index + 1; tmp_list := FUNC(!cur_index, var, var_list) :: !tmp_list end
+    | RETURN (pc, expr) -> begin cur_index := !cur_index + 1; tmp_list := RETURN(!cur_index, expr) :: !tmp_list end
     | RIGHTBRACKET (pc, pc') -> begin cur_index := !cur_index + 1; tmp_list := RIGHTBRACKET(!cur_index, !cur_index + pc' - pc) :: !tmp_list end;;
 
   let hash_table = Hashtbl.create 123;;
@@ -60,6 +60,7 @@
 %token <int> RIGHTBRACKET
 %token <int> LEFTPARENTHESIS
 %token RIGHTPARENTHESIS
+%token RETURN
 %token EOF
 
 %right ASSIGN
@@ -98,7 +99,7 @@ func_list: | func_definition func_list             {  }
            | func_definition                       {  }
   ;
 
-func_definition: FUN VAR LEFTPARENTHESIS var_list RIGHTPARENTHESIS
+func_definition: FUN VAR LEFTPARENTHESIS expr_list RIGHTPARENTHESIS
                  LEFTBRACKET instrlist RIGHTBRACKET                {  
                                                                      result_list := List.sort compare !result_list;
                                                                      cur_index := 0;
@@ -124,30 +125,29 @@ instr :   | SKIP SEMICOLON                                     { result_list := 
             ELSE LEFTBRACKET instrlist RIGHTBRACKET            { result_list := Ast.IF ($1, $2, $6 + 1) :: !result_list;
                                       													 result_list := Ast.RIGHTBRACKET($10, $10 + 1) :: !result_list;
                                                                  result_list := Ast.RIGHTBRACKET($6, $10 + 1) :: !result_list }
-          | VAR LEFTPARENTHESIS var_list RIGHTPARENTHESIS
-            SEMICOLON                                           {
-                                                                  result_list := Ast.FUNC ($2, $1, $3) :: !result_list
-                                                                }
+          | RETURN expr SEMICOLON                              { result_list := Ast.RETURN($3, $2) :: !result_list }                       
   ;
 
 
-var_list :  expr COMMA var_list                       { $1 :: $3 }
-         |  expr                                      { $1 :: [] } /** ИЗМЕНИТЬ! Добавить возможность пустого списка переменных */
+expr_list :                                            { [] }
+         |  expr COMMA expr_list                       { $1 :: $3 }
+         |  expr                                       { $1 :: [] }
   ;
 
-expr : VAR                                          { Ast.VAR $1 }
-     | INT                                          { Ast.NUMBER (int_of_string $1) }
-     | expr PLUS expr                               { Ast.PLUS ($1, $3) }
-     | expr MINUS expr                              { Ast.MINUS ($1, $3) }
-     | expr MUL expr                                { Ast.MUL ($1, $3) }
-     | expr DIV expr                                { Ast.DIV ($1, $3) }
-     | expr MODULO expr                             { Ast.MODULO ($1, $3) }
-     | expr EQ expr                                 { Ast.EQ ($1, $3) }
-     | expr NE expr                                 { Ast.NE ($1, $3) }
-     | expr GT expr                                 { Ast.GT ($1, $3) }
-     | expr GE expr                                 { Ast.GE ($1, $3) }
-     | expr LT expr                                 { Ast.LT ($1, $3) }
-     | expr LE expr                                 { Ast.LE ($1, $3) }
-     | expr AND expr                                { Ast.AND ($1, $3) }
-     | expr OR expr                                 { Ast.OR ($1, $3) }
+expr : VAR                                            { Ast.VAR $1 }
+     | INT                                            { Ast.NUMBER (int_of_string $1) }
+     | VAR LEFTPARENTHESIS expr_list RIGHTPARENTHESIS { Ast.FUNC ($1, $3) }
+     | expr PLUS expr                                 { Ast.PLUS ($1, $3) }
+     | expr MINUS expr                                { Ast.MINUS ($1, $3) }
+     | expr MUL expr                                  { Ast.MUL ($1, $3) }
+     | expr DIV expr                                  { Ast.DIV ($1, $3) }
+     | expr MODULO expr                               { Ast.MODULO ($1, $3) }
+     | expr EQ expr                                   { Ast.EQ ($1, $3) }
+     | expr NE expr                                   { Ast.NE ($1, $3) }
+     | expr GT expr                                   { Ast.GT ($1, $3) }
+     | expr GE expr                                   { Ast.GE ($1, $3) }
+     | expr LT expr                                   { Ast.LT ($1, $3) }
+     | expr LE expr                                   { Ast.LE ($1, $3) }
+     | expr AND expr                                  { Ast.AND ($1, $3) }
+     | expr OR expr                                   { Ast.OR ($1, $3) }
   ;

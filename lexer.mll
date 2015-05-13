@@ -40,6 +40,7 @@ rule token = parse
   | "then"       { THEN }
   | "else"       { ELSE }
   | "fun"        { FUN }
+  | "return"     { RETURN }
   | ";"          { cur_p := !cur_p + 1; SEMICOLON (!cur_p) }
   | ","          { COMMA }
   | variable     { VAR (get lexbuf) }
