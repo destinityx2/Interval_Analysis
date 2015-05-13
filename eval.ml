@@ -64,40 +64,40 @@ and call f_name arg_val =
 	end
 	
 and  iterate prog sym_table line = 
-	let next_line = step (List.nth prog (line - 1)) sym_table in
-	if next_line <= List.length prog then
+	let (next_line, cont) = step (List.nth prog (line - 1)) sym_table in
+	if next_line <= List.length prog && cont then
 		iterate prog sym_table next_line
 		
 and step instr sym_table = match instr with
-		| SKIP (pc) -> pc + 1
+		| SKIP (pc) -> (pc + 1, true)
 		| ASSIGN (pc, var, expr) -> 
 			begin
 				let tmp = (compute expr sym_table) in
 				Hashtbl.replace sym_table var tmp;
-				pc + 1
+				(pc + 1,true)
 			end
 		| WRITE (pc, expr) ->
 			begin
 				print_string (string_of_int (compute expr sym_table));
 				print_newline ();
-				pc + 1
+				(pc + 1,true)
 			end
 		| READ (pc, var) -> 
 			begin
 				(*Hashtbl.replace sym_table var (List.nth input !cur_in);
 				cur_in := !cur_in + 1;*)
-				pc + 1 
+				(pc + 1,true) 
 			end
 		| IF (pc, expr, pc') | WHILE (pc, expr, pc') ->
 			begin
-				if bool_of_int (compute expr sym_table) then pc + 1
-				else pc'
+				if bool_of_int (compute expr sym_table) then (pc + 1,true)
+				else (pc',true)
 			end
-		| RIGHTBRACKET (pc, pc') -> pc'
+		| RIGHTBRACKET (pc, pc') -> (pc',true)
 		| RETURN (pc, expr) -> 
 			begin
 				Stack.push (compute expr sym_table) call_stack;
-				pc + 1
+				(pc + 1,false)
 			end
 
 	
