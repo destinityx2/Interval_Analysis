@@ -21,7 +21,9 @@ let run chn trace interval eval input_arr =
   		(* run interval analysis *)
   		Hashtbl.iter (fl Analysis.func_tbl) hasht;
   		let res = 
-  		  Analysis.analysis instr_lst (Analysis.apx (List.length instr_lst) var_set arg_list)
+  		  Analysis.analysis 
+			instr_lst 
+			(Analysis.apx (List.length instr_lst) var_set arg_list)
   		in
   		Analysis.print_apx res Analysis.it_to_str
   	end

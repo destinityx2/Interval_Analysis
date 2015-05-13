@@ -3,8 +3,13 @@ open Interval
 open Hashtbl
 open Stack
 
+open Printf
+
 let call_stack = Stack.create ()
 let func_tbl : (Ast.var, Ast.instruction list * Ast.var list * Ast.var list) Hashtbl.t = Hashtbl.create 0
+
+(* (func_name, returning approximation) *)
+let func_apx = Hashtbl.create 0
 
 
 let it_to_str (l, h) = Printf.sprintf "[%.1f, %.1f]" l h
@@ -59,12 +64,16 @@ let rec compute_ar expr sym_table =
 		| FUNC (f_name, expr_list) -> 
 		begin
 			let (instr_list, var_set, arg_lst) = Hashtbl.find func_tbl f_name in
-			(*let expr_val_lst = ref [] in
-			let f e = expr_val_lst := !expr_val_lst @ [compute e sym_table] in
-			List.iter f expr_list;*)
-			(* call f_name !expr_val_lst; *)
-			analysis instr_list (apx (List.length instr_list) var_set arg_lst);
-			Stack.pop call_stack
+			try 
+				Hashtbl.find func_apx f_name;
+			with
+				Not_found ->
+				begin
+				analysis instr_list (apx (List.length instr_list) var_set arg_lst);
+				let fa = Stack.pop call_stack in
+				Hashtbl.replace func_apx f_name fa;
+				fa
+				end
 		end
 		| _ -> (infinity, neg_infinity)	
 
@@ -104,7 +113,7 @@ and merge st var cr =
 and merge' ta tb = 
 	Hashtbl.iter (merge tb) ta 
 
-and step prog ref_apx i = match List.nth prog i with
+and step prog ref_apx i ret_cnt = match List.nth prog i with
 	| ASSIGN (pc, var, expr) ->
 		begin
 			let j = pc in (* j = pc + 1 *)
@@ -136,7 +145,8 @@ and step prog ref_apx i = match List.nth prog i with
 	| RETURN (pc, expr) -> 
 		begin
 			Stack.push (compute_ar expr !ref_apx.(i)) call_stack;
-			merge' !ref_apx.(i) !ref_apx.(i+1)
+			merge' !ref_apx.(i) !ref_apx.(i+1);
+			ret_cnt := !ret_cnt + 1
 		end
 (*
 	fix-point analysis
@@ -145,6 +155,8 @@ and step prog ref_apx i = match List.nth prog i with
 *)
 and analysis prog fapx = 
 	(* Kleene iteration *)
+	let ret_cnt = ref 0 in
+	
 	let iterate apx = 
 		
 		let cur_apx  = ref (Array.copy apx) in
@@ -154,9 +166,7 @@ and analysis prog fapx =
 		begin
 			for i = 0 to ((List.length prog) - 1) do
 			begin
-				step prog cur_apx i;
-				(*print_apx !cur_apx it_to_str;
-				Printf.printf "\n"*)	
+				step prog cur_apx i ret_cnt;	
 			end
 			done;
 			(* if current apx equal to previous apx *)
@@ -164,7 +174,15 @@ and analysis prog fapx =
 			then fix_pt   := true
 			else prev_apx := Array.copy !cur_apx
 		end
-		done; 
+		done;
+		if !ret_cnt > 0 then 
+		begin
+			let ret_join = ref Interval.bot in
+			for i = 0 to !ret_cnt - 1 do
+				ret_join := Interval.join !ret_join (Stack.pop call_stack)
+			done;
+			Stack.push !ret_join call_stack
+		end;
 		!cur_apx
 	in 
 		iterate fapx

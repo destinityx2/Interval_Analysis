@@ -96,6 +96,7 @@ func_definition: FUN VAR LEFTPARENTHESIS var_list RIGHTPARENTHESIS
                                                                      List.iter renumerate !result_list;
                                                                      result_list := !tmp_list;
                                                                      result_list := List.rev !result_list;
+                                                                     var_set := !var_set @ $4;
                                                                      Hashtbl.add hash_table $2 (!result_list, unique !var_set, $4);
                                                                      tmp_list := [];
                                                                      result_list := [];
