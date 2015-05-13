@@ -1,5 +1,9 @@
 open Ast
 open Hashtbl
+open Stack
+
+let call_stack = Stack.create ()
+let func_tbl : (Ast.var, Ast.instruction list * Ast.var list * Ast.var list) Hashtbl.t = Hashtbl.create 0
 
 let bool_to_int b = if b then 1 else 0
 let bool_of_int i = if i > 0 then true else false
@@ -38,18 +42,33 @@ in
 		| MUL (e1, e2)   -> func e1 e2 ( * )
 		| DIV (e1, e2)   -> func e1 e2 (/)
 		| MODULO (e1, e2)-> func e1 e2 (mod)
+		| FUNC (f_name, expr_list) -> 
+		begin
+			let expr_val_lst = ref [] in
+			let f e = expr_val_lst := !expr_val_lst @ [compute e sym_table] in
+			List.iter f expr_list;
+			call f_name !expr_val_lst;
+			Stack.pop call_stack
+		end
 		| _ -> bool_to_int (check expr sym_table)
-
-(*
-	run interp.
-	prog  - list of instructions
-	input - list of input values 
-*)
-let run prog input = 
-	let cur_in = ref 0 in
+		
+and call f_name arg_val = 
 	let sym_table = Hashtbl.create 17 in
+	let (prog, var_set, arg_names) = Hashtbl.find func_tbl f_name in
 	
-	let step line = match List.nth prog (line - 1) with
+	begin
+		for i = 0 to (List.length arg_val) - 1 do
+			Hashtbl.replace sym_table (List.nth arg_names i) (List.nth arg_val i)
+		done;
+		iterate prog sym_table 1
+	end
+	
+and  iterate prog sym_table line = 
+	let next_line = step (List.nth prog (line - 1)) sym_table in
+	if next_line <= List.length prog then
+		iterate prog sym_table next_line
+		
+and step instr sym_table = match instr with
 		| SKIP (pc) -> pc + 1
 		| ASSIGN (pc, var, expr) -> 
 			begin
@@ -65,8 +84,8 @@ let run prog input =
 			end
 		| READ (pc, var) -> 
 			begin
-				Hashtbl.replace sym_table var (List.nth input !cur_in);
-				cur_in := !cur_in + 1;
+				(*Hashtbl.replace sym_table var (List.nth input !cur_in);
+				cur_in := !cur_in + 1;*)
 				pc + 1 
 			end
 		| IF (pc, expr, pc') | WHILE (pc, expr, pc') ->
@@ -75,23 +94,10 @@ let run prog input =
 				else pc'
 			end
 		| RIGHTBRACKET (pc, pc') -> pc'
-		
-	in
-
-	let rec iterate line = 
-		let next_line = step line in
-		if next_line <= List.length prog then
-			iterate next_line
-		else 
+		| RETURN (pc, expr) -> 
 			begin
-				(* print symbol's table *)
-				let print_var vr vl = 
-				begin
-					print_string (vr ^ " " ^ (string_of_int vl)); 
-					print_newline ()
-				end
-				in
-				Hashtbl.iter print_var sym_table
+				Stack.push (compute expr sym_table) call_stack;
+				pc + 1
 			end
-	in
-		iterate 1
+
+	
