@@ -1,19 +1,30 @@
 open Ast
 open Interval
 open Hashtbl
+open Stack
+
+let call_stack = Stack.create ()
+let func_tbl : (Ast.var, Ast.instruction list * Ast.var list * Ast.var list) Hashtbl.t = Hashtbl.create 0
+
 
 let it_to_str (l, h) = Printf.sprintf "[%.1f, %.1f]" l h
 
-let apx p_len vars = 
-	let add t var = Hashtbl.replace t var Interval.bot in
+(*
+	p_len  - instruction list's length
+	vars   - list of variables
+	arg_lst- list of arg names
+*)
+let apx p_len vars arg_lst = 
+	let add t value var = Hashtbl.replace t var value in
 	begin
 		let apx = Array.make (p_len+1) (Hashtbl.create 0) in
 		(for i = 0 to (Array.length apx) - 1 do 
 		begin
 			apx.(i) <- Hashtbl.create (List.length vars); 
-			List.iter ( add apx.(i) ) vars
+			List.iter ( add apx.(i) Interval.bot ) vars
 		end
 		done);
+		List.iter ( add apx.(0) Interval.top ) arg_lst;
 		apx
 	end
 
@@ -45,6 +56,16 @@ let rec compute_ar expr sym_table =
 		| MUL (e1, e2)   -> func e1 e2 (Interval.func ( *.))
 		| DIV (e1, e2)   -> func e1 e2 (Interval.func (/.))
 		| MODULO (e1, e2)-> func e1 e2 (Interval.func (mod_float))
+		| FUNC (f_name, expr_list) -> 
+		begin
+			let (instr_list, var_set, arg_lst) = Hashtbl.find func_tbl f_name in
+			(*let expr_val_lst = ref [] in
+			let f e = expr_val_lst := !expr_val_lst @ [compute e sym_table] in
+			List.iter f expr_list;*)
+			(* call f_name !expr_val_lst; *)
+			analysis instr_list (apx (List.length instr_list) var_set arg_lst);
+			Stack.pop call_stack
+		end
 		| _ -> (infinity, neg_infinity)	
 
 (*
@@ -52,7 +73,7 @@ let rec compute_ar expr sym_table =
 	RESULT:
 		(T, F) 
 *)
-let compute_lg expr sym_table = 
+and compute_lg expr sym_table = 
 	let var e = match e with
 		| EQ (VAR v, e') | NE (VAR v, e') | GT (VAR v, e')
 		| GE (VAR v, e') | LT (VAR v, e') | LE (VAR v, e')
@@ -76,14 +97,14 @@ let compute_lg expr sym_table =
 		(var expr, pp)
 
 
-let merge st var cr = 
+and merge st var cr = 
 	let pr = Hashtbl.find st var in
 	Hashtbl.replace st var (Interval.join cr pr)
 
-let merge' ta tb = 
+and merge' ta tb = 
 	Hashtbl.iter (merge tb) ta 
 
-let step prog ref_apx i = match List.nth prog i with
+and step prog ref_apx i = match List.nth prog i with
 	| ASSIGN (pc, var, expr) ->
 		begin
 			let j = pc in (* j = pc + 1 *)
@@ -112,13 +133,17 @@ let step prog ref_apx i = match List.nth prog i with
 			Hashtbl.replace !ref_apx.(k) var (Interval.join f (Hashtbl.find !ref_apx.(k) var));
 		end
 	| RIGHTBRACKET (pc, pc') -> merge' !ref_apx.(pc-1) !ref_apx.(pc'-1)
-	
+	| RETURN (pc, expr) -> 
+		begin
+			Stack.push (compute_ar expr !ref_apx.(i)) call_stack;
+			merge' !ref_apx.(i) !ref_apx.(i+1)
+		end
 (*
 	fix-point analysis
 	prog	- list of instructions
 	fapx	- first approximation 
 *)
-let analysis prog fapx = 
+and analysis prog fapx = 
 	(* Kleene iteration *)
 	let iterate apx = 
 		

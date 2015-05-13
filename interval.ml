@@ -1,4 +1,5 @@
 let bot = (infinity,neg_infinity)
+let top = (neg_infinity, infinity)
 
 let join (l,h) (l',h') = (min l l', max h h')
 

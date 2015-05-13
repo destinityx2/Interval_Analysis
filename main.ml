@@ -11,22 +11,23 @@ let run chn trace interval eval input_arr =
 		
 	let lexbuf = Lexing.from_channel chn in
 	let hasht = Parser.program Lexer.token lexbuf in
+	let fl f_tbl k v = Hashtbl.replace f_tbl k v in
+	let (instr_lst, var_set, arg_list) = Hashtbl.find hasht "main" in
   	begin 
   	if trace then
-		let (instr_lst, var_set, arg_list) = Hashtbl.find hasht "main" in
   		Ast.print_instructions instr_lst
   	else if interval then 
   	begin
   		(* run interval analysis *)
-  		(*let res = 
-  		  Analysis.analysis prog (Analysis.apx (List.length prog) var_set)
+  		Hashtbl.iter (fl Analysis.func_tbl) hasht;
+  		let res = 
+  		  Analysis.analysis instr_lst (Analysis.apx (List.length instr_lst) var_set arg_list)
   		in
-  		Analysis.print_apx res Analysis.it_to_str*)
+  		Analysis.print_apx res Analysis.it_to_str
   	end
   	else if eval then
 	begin
-  		let fl k v = Hashtbl.replace Eval.func_tbl k v in
-		Hashtbl.iter fl hasht;
+		Hashtbl.iter (fl Eval.func_tbl) hasht;
 		Eval.input := input_arr;
 		Eval.call "main" []
 	end

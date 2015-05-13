@@ -27,4 +27,5 @@ RULES:
 	- format of logical expression 
 		VAR op AE, where VAR - variable, 
 		op - logical operator, AE - arithmetic expression
+	- NO RECURSION
 	
