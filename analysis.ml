@@ -118,6 +118,7 @@ and step prog ref_apx i ret_cnt = match List.nth prog i with
 		begin
 			let j = pc in (* j = pc + 1 *)
 			let cr = compute_ar expr !ref_apx.(i) in
+			(*Printf.printf "%s\n" (it_to_str cr);*)
 			Hashtbl.replace !ref_apx.(i) var (Interval.join cr (Hashtbl.find !ref_apx.(i) var));
 			merge' !ref_apx.(i) !ref_apx.(j);
 			()
@@ -159,9 +160,16 @@ and analysis prog fapx =
 	
 	let iterate apx = 
 		
-		let cur_apx  = ref (Array.copy apx) in
-		let prev_apx = ref (Array.copy apx) in
+		let cur_apx  = ref (Array.create (Array.length apx) apx.(0) ) in
+		let prev_apx = ref (Array.create (Array.length apx) apx.(0) ) in
 		let fix_pt   = ref false in
+		begin
+		for i = 0 to (Array.length apx) - 1 do 
+		begin
+			!prev_apx.(i) <- Hashtbl.copy apx.(i);
+			!cur_apx.(i) <-  Hashtbl.copy apx.(i)
+		end
+		done;
 		while not !fix_pt do
 		begin
 			for i = 0 to ((List.length prog) - 1) do
@@ -169,11 +177,21 @@ and analysis prog fapx =
 				step prog cur_apx i ret_cnt;	
 			end
 			done;
+			print_apx apx it_to_str;
 			print_apx !cur_apx it_to_str;
+			print_apx !prev_apx it_to_str;
 			(* if current apx equal to previous apx *)
 			if (!cur_apx = !prev_apx)
 			then fix_pt   := true
-			else prev_apx := Array.copy !cur_apx
+			else 
+				begin
+					(*prev_apx := Array.copy !cur_apx*)
+					for i = 0 to (Array.length apx) - 1 do 
+					begin
+					!prev_apx.(i) <- Hashtbl.copy !cur_apx.(i);
+					end
+					done
+				end
 		end
 		done;
 		if !ret_cnt > 0 then 
@@ -185,6 +203,7 @@ and analysis prog fapx =
 			Stack.push !ret_join call_stack
 		end;
 		!cur_apx
+		end
 	in 
 		iterate fapx
 
