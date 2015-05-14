@@ -91,10 +91,15 @@ and step instr sym_table = match instr with
 				cur_in := !cur_in + 1;
 				(pc + 1,true) 
 			end
-		| IF (pc, expr, pc') | WHILE (pc, expr, pc') ->
+		| IF (pc, expr, pc') ->
 			begin
 				if bool_of_int (compute expr sym_table) then (pc + 1,true)
-				else (pc',true)
+				else (pc' + 1, true)
+			end
+		| WHILE (pc, expr, pc') ->
+			begin
+				if bool_of_int (compute expr sym_table) then (pc + 1,true)
+				else (pc', true)
 			end
 		| RIGHTBRACKET (pc, pc') -> (pc',true)
 		| RETURN (pc, expr) -> 

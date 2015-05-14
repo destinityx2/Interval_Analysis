@@ -1,8 +1,14 @@
-fun main() 
+fun main ()
 {
-x := 5;
-while x < 10 do {
-x := x + 1;
+	x := ff(4);
+	write x;
 }
-write x;
+
+fun ff(n) 
+{
+	if n <= 3 then {
+		return 3;
+	} else {
+		return 5;
+	}
 }
