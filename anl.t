@@ -1,21 +1,8 @@
 fun main() 
 {
-	x := tmp(4);
-	y := 3;
-
-	if y < x then {
-		x := 1;
-	} else {
-		x := 5;
-	}
-	write x;
+x := 10;
+while x > 0 do {
+x := x + 1;
 }
-
-fun tmp(x) 
-{
-	if x < 1 then {
-			return 2;
-	} else {
-			return 5;
-	}
+write x;
 }

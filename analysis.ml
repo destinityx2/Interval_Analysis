@@ -137,9 +137,9 @@ and step prog ref_apx i ret_cnt = match List.nth prog i with
 			let k = pc' - 1 in
 			let (var,(t,f)) = compute_lg expr !ref_apx.(i) in
 			merge' !ref_apx.(i) !ref_apx.(j); 
-			Hashtbl.replace !ref_apx.(j) var (Interval.join t (Hashtbl.find !ref_apx.(j) var));
+			Hashtbl.replace !ref_apx.(j) var t;
 			merge' !ref_apx.(i) !ref_apx.(k);
-			Hashtbl.replace !ref_apx.(k) var (Interval.join f (Hashtbl.find !ref_apx.(k) var));
+			Hashtbl.replace !ref_apx.(k) var f;
 		end
 	| RIGHTBRACKET (pc, pc') -> merge' !ref_apx.(pc-1) !ref_apx.(pc'-1)
 	| RETURN (pc, expr) -> 
@@ -169,6 +169,7 @@ and analysis prog fapx =
 				step prog cur_apx i ret_cnt;	
 			end
 			done;
+			print_apx !cur_apx it_to_str;
 			(* if current apx equal to previous apx *)
 			if (!cur_apx = !prev_apx)
 			then fix_pt   := true

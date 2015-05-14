@@ -9,9 +9,14 @@ let join (l,h) (l',h') = (min l l', max h h')
 		func (+.) a b
 *)
 let func op (l, r) (l', r') = 
-	let cmp a b = if a < b then -1 else if a == b then 0 else 1 in
-	let set = List.sort cmp [op l l'; op l r'; op r l'; op r r'] in
-	(List.nth set 0, List.nth set 3)
+	if (l == infinity && r == neg_infinity) || (l' == infinity && r' == neg_infinity) then
+		(infinity, neg_infinity) 
+	else
+		begin
+			let cmp a b = if a < b then -1 else if a == b then 0 else 1 in
+			let set = List.sort cmp [op l l'; op l r'; op r l'; op r r'] in
+			(List.nth set 0, List.nth set 3)
+		end
 
 
 (*

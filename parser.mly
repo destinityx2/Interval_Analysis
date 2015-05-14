@@ -113,7 +113,7 @@ instr :   | SKIP SEMICOLON                                     { result_list := 
           | WHILE expr DO LEFTBRACKET instrlist RIGHTBRACKET   { result_list := Ast.WHILE($1, $2, $6 + 1) :: !result_list;
                                                                  result_list := Ast.RIGHTBRACKET($6, $1) :: !result_list }
           | IF expr THEN LEFTBRACKET instrlist RIGHTBRACKET
-            ELSE LEFTBRACKET instrlist RIGHTBRACKET            { result_list := Ast.IF ($1, $2, $6 + 1) :: !result_list;
+            ELSE LEFTBRACKET instrlist RIGHTBRACKET            { result_list := Ast.IF ($1, $2, $6) :: !result_list;
                                       													 result_list := Ast.RIGHTBRACKET($10, $10 + 1) :: !result_list;
                                                                  result_list := Ast.RIGHTBRACKET($6, $10 + 1) :: !result_list }
           | RETURN expr SEMICOLON                              { result_list := Ast.RETURN($3, $2) :: !result_list }                       
