@@ -25,9 +25,7 @@ let run chn trace interval eval input_arr =
 			instr_lst 
 			(Analysis.apx (List.length instr_lst) var_set arg_list)
   		in
-  		begin
-  		(*Analysis.print_apx res Analysis.it_to_str*)
-  		end
+  		Analysis.print_apx res Analysis.it_to_str
   	end
   	else if eval then
 	begin

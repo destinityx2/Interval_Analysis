@@ -177,9 +177,6 @@ and analysis prog fapx =
 				step prog cur_apx i ret_cnt;	
 			end
 			done;
-			print_apx apx it_to_str;
-			print_apx !cur_apx it_to_str;
-			print_apx !prev_apx it_to_str;
 			(* if current apx equal to previous apx *)
 			if (!cur_apx = !prev_apx)
 			then fix_pt   := true
