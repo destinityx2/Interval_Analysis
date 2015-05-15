@@ -105,13 +105,13 @@ and compute_lg expr sym_table =
 	in
 		(var expr, pp)
 
-
-and merge st var cr = 
+(* EXAMPLE: op = Interval.join *)
+and merge st op var cr = 
 	let pr = Hashtbl.find st var in
-	Hashtbl.replace st var (Interval.join cr pr)
+	Hashtbl.replace st var (op cr pr)
 
-and merge' ta tb = 
-	Hashtbl.iter (merge tb) ta 
+and merge' ta tb op = 
+	Hashtbl.iter (merge tb op) ta 
 
 and step prog ref_apx i ret_cnt = match List.nth prog i with
 	| ASSIGN (pc, var, expr) ->
@@ -120,15 +120,15 @@ and step prog ref_apx i ret_cnt = match List.nth prog i with
 			let cr = compute_ar expr !ref_apx.(i) in
 			(*Printf.printf "%s\n" (it_to_str cr);*)
 			Hashtbl.replace !ref_apx.(i) var (Interval.join cr (Hashtbl.find !ref_apx.(i) var));
-			merge' !ref_apx.(i) !ref_apx.(j);
+			merge' !ref_apx.(i) !ref_apx.(j) Interval.join;
 			()
 		end
-	| WRITE (pc, _) | SKIP (pc) -> merge' !ref_apx.(i) !ref_apx.(i+1)
+	| WRITE (pc, _) | SKIP (pc) -> merge' !ref_apx.(i) !ref_apx.(i+1) Interval.join
 	| READ (pc, var) ->
 		begin
 			let j = pc in (* j = pc + 1 *)
 			let top = (neg_infinity, infinity) in
-			merge' !ref_apx.(i) !ref_apx.(j);
+			merge' !ref_apx.(i) !ref_apx.(j) Interval.join;
 			Hashtbl.replace !ref_apx.(i) var top; 
 			Hashtbl.replace !ref_apx.(j) var top
 		end 
@@ -137,18 +137,19 @@ and step prog ref_apx i ret_cnt = match List.nth prog i with
 			let j = pc in
 			let k = pc' - 1 in
 			let (var,(t,f)) = compute_lg expr !ref_apx.(i) in
-			merge' !ref_apx.(i) !ref_apx.(j); 
+			merge' !ref_apx.(i) !ref_apx.(j) Interval.join; 
 			Hashtbl.replace !ref_apx.(j) var t;
-			merge' !ref_apx.(i) !ref_apx.(k);
+			merge' !ref_apx.(i) !ref_apx.(k) Interval.join;
 			Hashtbl.replace !ref_apx.(k) var f;
 		end
-	| RIGHTBRACKET (pc, pc') -> merge' !ref_apx.(pc-1) !ref_apx.(pc'-1)
+	| RIGHTBRACKET (pc, pc') -> merge' !ref_apx.(pc-1) !ref_apx.(pc'-1) Interval.join
 	| RETURN (pc, expr) -> 
 		begin
 			Stack.push (compute_ar expr !ref_apx.(i)) call_stack;
-			merge' !ref_apx.(i) !ref_apx.(i+1);
+			merge' !ref_apx.(i) !ref_apx.(i+1) Interval.join;
 			ret_cnt := !ret_cnt + 1
 		end
+		
 (*
 	fix-point analysis
 	prog	- list of instructions
@@ -163,6 +164,7 @@ and analysis prog fapx =
 		let cur_apx  = ref (Array.create (Array.length apx) apx.(0) ) in
 		let prev_apx = ref (Array.create (Array.length apx) apx.(0) ) in
 		let fix_pt   = ref false in
+		
 		begin
 		for i = 0 to (Array.length apx) - 1 do 
 		begin
@@ -177,11 +179,19 @@ and analysis prog fapx =
 				step prog cur_apx i ret_cnt;	
 			end
 			done;
+			for i = 0 to (Array.length apx) - 1 do
+				merge' !prev_apx.(i) !cur_apx.(i) Interval.wide_op	 
+			done;
 			(* if current apx equal to previous apx *)
 			if (!cur_apx = !prev_apx)
 			then fix_pt   := true
 			else 
 				begin
+					(* remove useless valuse from call stack *)
+					for i = 0 to !ret_cnt-1 do
+						Stack.pop call_stack
+					done;
+					ret_cnt := 0;
 					(*prev_apx := Array.copy !cur_apx*)
 					for i = 0 to (Array.length apx) - 1 do 
 					begin

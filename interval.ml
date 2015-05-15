@@ -53,3 +53,24 @@ let ne i i' =
 	let e = eq i i' in
 	join (lt i e) (gt i e)
 
+(* widening operator *)
+let wide_op : float*float -> float*float -> float*float = fun (l,h) (l',h') ->
+	if l == infinity && h == neg_infinity then (l',h')
+	else if l' == infinity && h' == neg_infinity then (l,h)
+	else 
+		begin
+			let a = if l' < l then neg_infinity else l in
+			let b = if h' > h then infinity else h in
+			(a, b)
+		end
+
+(* narrwing operator *)
+let narrow_op : float*float -> float*float -> float*float = fun (l,h) (l',h') ->
+	if l == infinity && h == neg_infinity then bot
+	else if l' == infinity && h' == neg_infinity then bot
+	else 
+		begin
+			let a = if l == neg_infinity then l' else l in
+			let b = if h == infinity then h' else h in
+			(a, b)
+		end
