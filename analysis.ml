@@ -163,15 +163,9 @@ and analysis prog fapx =
 		
 		let cur_apx  = ref (Array.create (Array.length apx) apx.(0) ) in
 		let prev_apx = ref (Array.create (Array.length apx) apx.(0) ) in
-		let fix_pt   = ref false in
 		
-		begin
-		for i = 0 to (Array.length apx) - 1 do 
-		begin
-			!prev_apx.(i) <- Hashtbl.copy apx.(i);
-			!cur_apx.(i) <-  Hashtbl.copy apx.(i)
-		end
-		done;
+		let find_fix_point cur_apx prev_apx operator = 
+		let fix_pt   = ref false in
 		while not !fix_pt do
 		begin
 			for i = 0 to ((List.length prog) - 1) do
@@ -180,7 +174,7 @@ and analysis prog fapx =
 			end
 			done;
 			for i = 0 to (Array.length apx) - 1 do
-				merge' !prev_apx.(i) !cur_apx.(i) Interval.wide_op	 
+				merge' !prev_apx.(i) !cur_apx.(i) operator	 
 			done;
 			(* if current apx equal to previous apx *)
 			if (!cur_apx = !prev_apx)
@@ -200,7 +194,27 @@ and analysis prog fapx =
 					done
 				end
 		end
+		done
+		
+		in
+		
+		begin
+		for i = 0 to (Array.length apx) - 1 do 
+		begin
+			!prev_apx.(i) <- Hashtbl.copy apx.(i);
+			!cur_apx.(i) <-  Hashtbl.copy apx.(i)
+		end
 		done;
+		(* fix point using widening operator *)
+		find_fix_point cur_apx prev_apx Interval.wide_op;
+		(* remove useless valuse from call stack *)
+		for i = 0 to !ret_cnt-1 do
+			Stack.pop call_stack
+		done;
+		ret_cnt := 0;
+		(* fix point using narrowing operator *)
+		find_fix_point cur_apx prev_apx Interval.narrow_op;
+		(* join multiple returning values *)
 		if !ret_cnt > 0 then 
 		begin
 			let ret_join = ref Interval.bot in
