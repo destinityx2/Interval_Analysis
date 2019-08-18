@@ -1,10 +1,15 @@
-Interval_analysis
+# Interval_analysis
+Interval Analysis implementation for abstract language using [OCaml](https://ocaml.org/). This project is completed as a part of practice in JetBrains Lab.
 
-Try 'make' to build project. 
+### Getting started
+
+Type 'make' to build project. 
 
 Example of use:
 
+```
 ./prog test.t [OPTION] [list of integers]
+```
 
 OPTION:
 
